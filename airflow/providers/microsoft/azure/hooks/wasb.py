@@ -24,7 +24,9 @@ Airflow connection of type `wasb` exists. Authorization can be done by supplying
 login (=Storage account name) and password (=KEY), or login and SAS token in the extra
 field (see connection `wasb_default` for an example).
 """
-from azure.storage.blob import BlockBlobService
+from typing import Any
+
+from azure.storage.blob import Blob, BlockBlobService
 
 from airflow.exceptions import AirflowException
 from airflow.hooks.base_hook import BaseHook
@@ -42,19 +44,23 @@ class WasbHook(BaseHook):
     :type wasb_conn_id: str
     """
 
-    def __init__(self, wasb_conn_id='wasb_default'):
+    def __init__(self,
+                 wasb_conn_id: str = 'wasb_default') -> None:
         super().__init__()
         self.conn_id = wasb_conn_id
         self.connection = self.get_conn()
 
-    def get_conn(self):
+    def get_conn(self) -> BlockBlobService:
         """Return the BlockBlobService object."""
         conn = self.get_connection(self.conn_id)
         service_options = conn.extra_dejson
         return BlockBlobService(account_name=conn.login,
                                 account_key=conn.password, **service_options)
 
-    def check_for_blob(self, container_name, blob_name, **kwargs):
+    def check_for_blob(self,
+                       container_name: str,
+                       blob_name: str,
+                       **kwargs) -> bool:
         """
         Check if a blob exists on Azure Blob Storage.
 
@@ -70,7 +76,10 @@ class WasbHook(BaseHook):
         """
         return self.connection.exists(container_name, blob_name, **kwargs)
 
-    def check_for_prefix(self, container_name, prefix, **kwargs):
+    def check_for_prefix(self,
+                         container_name: str,
+                         prefix: str,
+                         **kwargs) -> bool:
         """
         Check if a prefix exists on Azure Blob storage.
 
@@ -88,7 +97,11 @@ class WasbHook(BaseHook):
                                              num_results=1, **kwargs)
         return len(list(matches)) > 0
 
-    def load_file(self, file_path, container_name, blob_name, **kwargs):
+    def load_file(self,
+                  file_path: str,
+                  container_name: str,
+                  blob_name: str,
+                  **kwargs) -> None:
         """
         Upload a file to Azure Blob Storage.
 
@@ -106,7 +119,11 @@ class WasbHook(BaseHook):
         self.connection.create_blob_from_path(container_name, blob_name,
                                               file_path, **kwargs)
 
-    def load_string(self, string_data, container_name, blob_name, **kwargs):
+    def load_string(self,
+                    string_data: str,
+                    container_name: str,
+                    blob_name: str,
+                    **kwargs) -> None:
         """
         Upload a string to Azure Blob Storage.
 
@@ -124,7 +141,11 @@ class WasbHook(BaseHook):
         self.connection.create_blob_from_text(container_name, blob_name,
                                               string_data, **kwargs)
 
-    def get_file(self, file_path, container_name, blob_name, **kwargs):
+    def get_file(self,
+                 file_path: str,
+                 container_name: str,
+                 blob_name: str,
+                 **kwargs) -> Blob:
         """
         Download a file from Azure Blob Storage.
 
@@ -141,7 +162,10 @@ class WasbHook(BaseHook):
         return self.connection.get_blob_to_path(container_name, blob_name,
                                                 file_path, **kwargs)
 
-    def read_file(self, container_name, blob_name, **kwargs):
+    def read_file(self,
+                  container_name: str,
+                  blob_name: str,
+                  **kwargs) -> Blob:
         """
         Read a file from Azure Blob Storage and return as a string.
 
@@ -157,8 +181,12 @@ class WasbHook(BaseHook):
                                                 blob_name,
                                                 **kwargs).content
 
-    def delete_file(self, container_name, blob_name, is_prefix=False,
-                    ignore_if_missing=False, **kwargs):
+    def delete_file(self,
+                    container_name: str,
+                    blob_name: str,
+                    is_prefix: bool = False,
+                    ignore_if_missing: bool = False,
+                    **kwargs) -> Any:
         """
         Delete a file from Azure Blob Storage.
 
